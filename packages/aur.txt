@@ -1,0 +1,7 @@
+floorp-bin
+zen-browser-bin
+amneziavpn-bin
+hiddify-next-bin
+cherry-studio-bin
+lmstudio-bin
+onlyoffice-bin

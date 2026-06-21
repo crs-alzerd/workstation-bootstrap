@@ -1,0 +1,66 @@
+# Core
+git
+github-cli
+stow
+base-devel
+curl
+wget
+unzip
+zip
+rsync
+jq
+tree
+less
+which
+man-db
+man-pages
+
+# Shell / terminal
+zsh
+kitty
+starship
+fzf
+ripgrep
+fd
+bat
+eza
+zoxide
+btop
+fastfetch
+
+# Dev / Neovim / LazyVim dependencies
+neovim
+lazygit
+nodejs
+npm
+python
+python-pynvim
+go
+rust
+cargo
+gcc
+make
+cmake
+pkgconf
+luarocks
+
+# Desktop apps
+obsidian
+qbittorrent
+telegram-desktop
+discord
+calibre
+libreoffice-fresh
+flatpak
+
+# Fonts
+ttf-jetbrains-mono-nerd
+noto-fonts
+noto-fonts-cjk
+noto-fonts-emoji
+
+# Optional useful tools
+keepassxc
+gnupg
+age
+sops

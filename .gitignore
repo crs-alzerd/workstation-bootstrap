@@ -1,0 +1,41 @@
+# secrets
+.env
+.env.*
+!.env.example
+
+*.key
+*.pem
+*.p12
+*.ovpn
+*.mobileconfig
+*.conf.private
+
+secrets/
+private/
+tokens/
+credentials/
+
+# logs/cache
+*.log
+.cache/
+tmp/
+temp/
+
+# local editor/session files
+Session.vim
+.DS_Store
+
+# app profiles that may contain tokens/sessions
+TelegramDesktop/
+discord/
+AmneziaVPN/
+hiddify/
+cherry-studio/
+"LM Studio"/
+zen/
+floorp/
+mozilla/
+
+# backups created by scripts
+backup/
+backups/
