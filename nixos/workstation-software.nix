@@ -1,18 +1,34 @@
 { config, pkgs, lib, ... }:
 
 let
-  # Hiddify is not kept in nixpkgs at the moment, so this module does not try to
-  # pretend it is a normal nixpkgs package. The helper below installs the latest
-  # upstream AppImage into the current user's ~/.local/bin.
+  # Some Arch package names do not map 1:1 to nixpkgs.
+  # Keep fallback selection here instead of breaking nixos-rebuild on one renamed app.
+  firstExistingPackage = name: paths:
+    let
+      existing = builtins.filter (path: lib.hasAttrByPath path pkgs) paths;
+    in
+      if existing == [ ] then
+        lib.warn "workstation-software: package '${name}' is not available in this nixpkgs revision; skipped" [ ]
+      else
+        [ (lib.attrByPath (builtins.head existing) null pkgs) ];
+
+  libreOfficePackage = firstExistingPackage "libreoffice" [
+    [ "libreoffice-qt" ]
+    [ "libreoffice-fresh" ]
+    [ "libreoffice" ]
+  ];
+
+  # Hiddify is not kept in nixpkgs at the moment, so install it as upstream AppImage.
+  # This is intentionally a user-level helper: NixOS keeps the runner declarative,
+  # while the downloaded AppImage stays in ~/.local/bin.
   installHiddify = pkgs.writeShellScriptBin "install-hiddify-appimage" ''
     set -euo pipefail
 
     install_dir="$HOME/.local/bin"
     app_dir="$HOME/.local/share/applications"
-    icon_dir="$HOME/.local/share/icons/hicolor/512x512/apps"
     target="$install_dir/Hiddify.AppImage"
 
-    mkdir -p "$install_dir" "$app_dir" "$icon_dir"
+    mkdir -p "$install_dir" "$app_dir"
 
     url="https://github.com/hiddify/hiddify-app/releases/latest/download/Hiddify-Linux-x64.AppImage"
 
@@ -37,28 +53,108 @@ in
 {
   imports = [ ];
 
-  # Required by some proprietary desktop applications and harmless if unused.
+  # Required for Obsidian, Discord and other proprietary desktop applications.
   nixpkgs.config.allowUnfree = true;
 
-  environment.systemPackages = with pkgs; [
-    # VPN / proxy clients
-    amnezia-vpn
-    v2rayn
+  # package equivalent of Arch/CachyOS zsh setup.
+  programs.zsh.enable = true;
 
-    # Hiddify support path. Hiddify itself was removed from nixpkgs, so keep the
-    # AppImage runner and a helper script instead of adding a broken package name.
+  # Flatpak is in the original package list and also useful as a fallback for apps
+  # that are not packaged cleanly in nixpkgs.
+  services.flatpak.enable = true;
+
+  fonts.packages = with pkgs; [
+    nerd-fonts.jetbrains-mono
+    noto-fonts
+    noto-fonts-cjk-sans
+    noto-fonts-emoji
+  ];
+
+  environment.systemPackages = with pkgs; [
+    # Core — from packages/pacman.txt
+    git
+    gh                  # Arch: github-cli
+    stow
+    curl
+    wget
+    unzip
+    zip
+    rsync
+    jq
+    tree
+    less
+    which
+    man-db
+    man-pages
+
+    # Arch base-devel equivalent
+    gcc
+    gnumake             # Arch: make
+    binutils
+    patch
+    pkg-config          # Arch: pkgconf
+    cmake
+
+    # Shell / terminal
+    zsh
+    kitty
+    starship
+    fzf
+    ripgrep
+    fd
+    bat
+    eza
+    zoxide
+    btop
+    fastfetch
+
+    # Dev / Neovim / LazyVim dependencies
+    neovim
+    lazygit
+    nodejs              # includes npm in nixpkgs builds
+    python3             # Arch: python
+    python3Packages.pynvim
+    go
+    rustc
+    cargo
+    rustup
+    luarocks
+
+    # Desktop apps
+    obsidian
+    qbittorrent
+    telegram-desktop
+    discord
+    calibre
+    flatpak
+
+    # Fonts are also declared in fonts.packages above, but keeping font packages
+    # in the profile makes them explicit in package listings.
+    nerd-fonts.jetbrains-mono
+    noto-fonts
+    noto-fonts-cjk-sans
+    noto-fonts-emoji
+
+    # Optional useful tools
+    keepassxc
+    gnupg
+    age
+    sops
+
+    # Extra VPN / proxy clients on top of the repository package list
+    amnezia-vpn
     appimage-run
     installHiddify
 
-    # Useful VPN/proxy debugging tools
-    curl
-    jq
+    # Kept because it was previously requested as the Linux desktop analogue of V2RayNG.
+    v2rayn
+
+    # VPN/proxy debugging tools
     wireguard-tools
     amneziawg-tools
-  ];
+  ] ++ libreOfficePackage;
 
-  # AmneziaVPN needs a daemon service unit shipped by the package.
-  # If the package changes the unit name upstream, check with:
+  # AmneziaVPN daemon. If upstream changes the unit name, check with:
   #   systemctl list-unit-files | grep -i amnezia
   systemd.services.AmneziaVPN = {
     wantedBy = [ "multi-user.target" ];
@@ -68,9 +164,9 @@ in
     };
   };
 
-  # Helpful for TUN/TAP based clients. This does not open inbound firewall ports.
+  # Helpful for TUN/TAP based VPN/proxy clients. This does not open inbound ports.
   networking.firewall.checkReversePath = "loose";
 
-  # Desktop integration baseline. Keep this if using KDE/GNOME/Hyprland with portals.
+  # Desktop integration baseline for KDE/GNOME/Hyprland with portals.
   xdg.portal.enable = true;
 }
