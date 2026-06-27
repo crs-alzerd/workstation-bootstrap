@@ -2,6 +2,7 @@ floorp-bin
 zen-browser-bin
 amneziavpn-bin
 hiddify-next-bin
+v2rayn-bin
 cherry-studio-bin
 lmstudio-bin
 onlyoffice-bin
